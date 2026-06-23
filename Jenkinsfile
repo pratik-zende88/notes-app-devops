@@ -88,22 +88,24 @@ pipeline {
                 script {
                     def healthy = false
                     def maxRetries = 5
-                    def waitSec   = 10
+                    def waitSec = 10
 
                     for (int i = 1; i <= maxRetries; i++) {
                         echo "Health check attempt ${i}/${maxRetries}..."
-                        def statusCode = sh(
-                            script: "curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://172.31.36.102:5000/health",
+                        
+                        def result = sh(
+                            script: """curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://172.31.36.102:5000/health""",
                             returnStdout: true
                         ).trim()
 
-                        if (statusCode == "200") {
-                            echo "Health check passed (HTTP 200)"
+                        echo "Got response: ${result}"
+
+                        if (result == "200") {
+                            echo "Health check passed!"
                             healthy = true
                             break
                         }
 
-                        echo "Got HTTP ${statusCode} — waiting ${waitSec}s..."
                         sleep(waitSec)
                     }
 
