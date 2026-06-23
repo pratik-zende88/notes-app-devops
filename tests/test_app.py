@@ -60,3 +60,4 @@ def test_delete_note(client):
 def test_missing_fields(client):
     resp = client.post("/notes", json={"title": "only title"})
     assert resp.status_code == 400
+# tests
