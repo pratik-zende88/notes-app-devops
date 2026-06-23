@@ -87,32 +87,29 @@ pipeline {
             steps {
                 script {
                     def healthy = false
-                    def maxRetries = 5
-                    def waitSec = 10
 
-                    for (int i = 1; i <= maxRetries; i++) {
-                        echo "Health check attempt ${i}/${maxRetries}..."
-                        
-                        def result = sh(
-                            script: """curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://172.31.36.102:5000/health""",
-                            returnStdout: true
-                        ).trim()
+                    for (int i = 1; i <= 5; i++) {
+                        echo "Health check attempt ${i}/5..."
 
-                        echo "Got response: ${result}"
+                        sh(script: """
+                            sleep 5
+                            HTTP_CODE=\$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://172.31.36.102:5000/health)
+                            echo "HTTP_CODE=\$HTTP_CODE"
+                            echo \$HTTP_CODE > /tmp/health_status
+                        """)
 
-                        if (result == "200") {
-                            echo "Health check passed!"
+                        def code = sh(script: "cat /tmp/health_status", returnStdout: true).trim()
+                        echo "Status code: ${code}"
+
+                        if (code == "200") {
                             healthy = true
+                            echo "Health check passed!"
                             break
                         }
-
-                        sleep(waitSec)
                     }
 
                     if (!healthy) {
-                        echo "All health checks failed. Rolling back..."
-                        currentBuild.result = 'FAILURE'
-
+                        echo "Rolling back..."
                         if (env.PREV_TAG && env.PREV_TAG != 'none') {
                             sh """
                                 docker stop notes-app 2>/dev/null || true
@@ -128,7 +125,6 @@ pipeline {
                                     -e DB_NAME=${DB_NAME} \
                                     ${env.PREV_TAG}
                             """
-                            echo "Rollback complete!"
                         }
                         error("Deployment failed. Rolled back.")
                     }
