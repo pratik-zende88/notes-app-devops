@@ -15,11 +15,10 @@ pipeline {
             steps {
                 script {
                     env.IMAGE_TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-                    echo "Building image: ${IMAGE_NAME}:${IMAGE_TAG}"
                 }
                 sh """
                     docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
-                    docker tag  ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
                 """
             }
         }
@@ -94,7 +93,7 @@ pipeline {
                     for (int i = 1; i <= maxRetries; i++) {
                         echo "Health check attempt ${i}/${maxRetries}..."
                         def statusCode = sh(
-                            script: "curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://localhost:5000/health",
+                            script: "curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://172.31.36.102:5000/health",
                             returnStdout: true
                         ).trim()
 
@@ -127,7 +126,7 @@ pipeline {
                                     -e DB_NAME=${DB_NAME} \
                                     ${env.PREV_TAG}
                             """
-                            echo "Rollback complete — running: ${env.PREV_TAG}"
+                            echo "Rollback complete!"
                         }
                         error("Deployment failed. Rolled back.")
                     }
