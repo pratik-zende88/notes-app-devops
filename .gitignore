@@ -1,0 +1,18 @@
+# Never commit real secrets
+.env
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+venv/
+.venv/
+
+# Docker
+*.tar.gz
+
+# OS
+.DS_Store
